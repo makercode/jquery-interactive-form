@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+        Rest Asiento
+    </title>
+    <link 
+      rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.0/css/bootstrap-datepicker.css"
+    />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.0/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+
+    <style type="text/css">
+      .asiento {
+
+      }
+      .help-block {
+        color: red;
+        font-size: 12px;
+      }
+      .asiento {
+        padding: 40px 20px 20px;
+        position: relative;
+      }
+      .asiento .floating-delete {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+      }
+      .asientos-container--target .asiento:nth-child(even) {
+        background: #ddd;
+      }
+    </style>
+    <meta charset="utf-8"></meta>
+
+  </head>
+  <body>
+    <div class="col-md-6 mt-4 mb-4 mx-auto">
+      <h1>Asientos</h1>
+
+      <form action="process.php" method="POST" class="form-asiento-ventas">
+        <div class="row mb-4 mt-4">
+          <div class="col-6">
+            <label for="name">Ruc</label>
+            <input
+              type="text"
+              class="form-control"
+              id="Ruc"
+              name="Ruc"
+              placeholder="Ruc"
+              maxlength="12"
+            />
+          </div>
+        </div>
+
+        <div class="asientos-container border p-2 py-3 mb-4">
+          <div class="asientos-container--target asientos">
+          </div>
+          <div class="d-flex">
+            <button class="btn btn-success mx-auto mt-3" id="js-button-add" type="button">+ Agregar Asiento</button>
+          </div>
+        </div>
+
+        <script id="asiento-template" type="text/x-handlebars-template">
+
+          {{#each asientos as |asiento asientoIndex|}}
+            <div class="asiento asiento-{{@index}}" index="{{@index}}">
+              <button class="btn btn-outline-danger floating-delete" id="js-button-delete" type="button">Eliminar</button>
+              {{#each asiento as |inputField dataIndex|}}
+                  <div id="{{inputField.property}}-group" class="form-group">
+                    {{#if (eq inputField.type "text")}}
+                      <label for="{{inputField.property}}">{{inputField.label}}</label>
+                      <input
+                        value="{{inputField.value}}"
+                        type="text"
+                        class="form-control"
+                        id="{{inputField.property}}"
+                        name="{{inputField.property}}"
+                        placeholder="{{inputField.placeholder}}"
+                        dataindex="{{dataIndex}}"
+                        maxlength="{{inputField.maxLength}}"
+                      />
+                    {{/if}}
+                    {{#if (eq inputField.type "number")}}
+                      <label for="{{inputField.property}}">{{inputField.label}}</label>
+                      <input
+                        value="{{inputField.value}}"
+                        type="number"
+                        class="form-control"
+                        id="{{inputField.property}}"
+                        name="{{inputField.property}}"
+                        placeholder="{{inputField.placeholder}}"
+                        dataindex="{{dataIndex}}"
+                        maxlength="{{inputField.maxLength}}"
+                      />
+                    {{/if}}
+                    {{#if (eq inputField.type "select")}}
+                      <label for="{{inputField.property}}">{{inputField.label}}</label>
+                      <select
+                        value="{{asiento.Exonerado.value}}" 
+                        name="{{inputField.property}}" 
+                        class="form-control"
+                        dataindex="{{dataIndex}}">
+                        {{#each inputField.options as |option optionId|}}
+                          {{#if option.selected}}
+                            <option value="{{option.value}}" selected>{{option.label}}</option>
+                          {{else}}
+                            <option value="{{option.value}}">{{option.label}}</option>
+                          {{/if}}
+                        {{/each}}
+                      </select>
+                    {{/if}}
+                    {{#if (eq inputField.type "date")}}
+                      <label for="{{inputField.property}}">{{inputField.label}}</label>
+                      <input
+                        value="{{inputField.value}}"
+                        type="text"
+                        class="form-control datepicker_complete"
+                        id="{{inputField.property}}"
+                        name="{{inputField.property}}"
+                        placeholder="{{inputField.placeholder}}"
+                        dataindex="{{dataIndex}}"
+                        maxlength="{{inputField.maxLength}}"
+                        autocomplete="off"
+                      />
+                    {{/if}}
+                    {{#if (eq inputField.type "shortdate")}}
+                      <label for="{{inputField.property}}">{{inputField.label}}</label>
+                      <input
+                        value="{{inputField.value}}"
+                        type="text"
+                        class="form-control datepicker_annomes"
+                        id="{{inputField.property}}"
+                        name="{{inputField.property}}"
+                        placeholder="{{inputField.placeholder}}"
+                        dataindex="{{dataIndex}}"
+                        maxlength="{{inputField.maxLength}}"
+                        autocomplete="off"
+                      />
+                    {{/if}}
+                    <div class="help-block"></div>
+                  </div>
+              {{/each}}
+            </div>
+          {{/each}}
+
+        </script>
+
+        <div class="text-right">
+          <button type="submit" class="btn btn-success">
+            Enviar
+          </button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
+
+<script type="text/javascript"></script>

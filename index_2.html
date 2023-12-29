@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+        Rest Asiento
+    </title>
+    <link 
+      rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.0/css/bootstrap-datepicker.css"
+    />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <script src="//code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.0/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+
+    <style type="text/css">
+      .asiento {
+      }
+      .help-block {
+        color: red;
+        font-size: 12px;
+      }
+      .asiento {
+        padding: 40px 20px 20px;
+      }
+      .asiento input {
+        width: 180px;
+      }
+      .asiento select {
+        min-width: 180px;
+      }
+      .asiento .floating-delete {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+      }
+      .asientos-container--target {
+        overflow: auto;
+        margin-left: 100px;
+        padding: 0;
+      }
+      table td {
+        width: 140px;
+        height: 70px;
+      }
+      table th {
+        width: 140px;
+        height: 78px;
+      }
+      .keep-left {
+        margin-left: -100px!important;
+        width: 100px;
+        position: absolute;
+        margin-top: -1px;
+        vertical-align: middle;
+        background: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center
+      }
+      .asientos-container--target .asiento:nth-child(even) {
+        background: #ddd;
+      }
+    </style>
+    <meta charset="utf-8"></meta>
+
+  </head>
+  <body>
+    <div class="container">
+      <h1>Asiento</h1>
+
+      <form action="process.php" method="POST" class="form-asiento-ventas">
+        <div class="row mb-4 mt-4">
+          <div class="col-12">
+            <label for="name">Ruc</label>
+            <input
+              type="text"
+              class="form-control"
+              id="Ruc"
+              name="Ruc"
+              placeholder="Ruc"
+              maxlength="12"
+            />
+          </div>
+        </div>
+
+        <div class="asientos-container mb-4 pb-2 overflow-hidden">
+          <div class="asientos-container--target asientos">
+          </div>
+          <div class="d-flex">
+            <button class="btn btn-outline-success btn-sm mr-auto mt-2" id="js-button-add" type="button">+ Agregar Asiento</button>
+          </div>
+        </div>
+
+        <script id="asiento-template" type="text/x-handlebars-template">
+          <p class="general-errors"></p>
+          <table width="100%" border="1" cellpadding="10" cellspacing="0" bordercolor="#000000">
+
+            {{#each asientos as |asiento asientoIndex|}}
+              {{#if @first}}
+                <tr>
+                  <th class="header-table keep-left" index="{{@index}}">
+                    Acciones
+                  </th>
+                  {{#each asiento as |inputField dataIndex|}}
+                    <th class="header-table" index="{{@index}}">
+                      <label class="m-0">{{inputField.label}}</label>
+                    </th>
+                  {{/each}}
+                </tr>
+              {{/if}}
+
+              <tr class="asiento asiento-{{@index}}" index="{{@index}}">
+                <td class="keep-left">
+                <button class="btn btn-outline-danger btn-sm" id="js-button-delete" type="button">Eliminar</button>
+                </td>
+                {{#each asiento as |inputField dataIndex|}}
+                    <td id="{{inputField.property}}-group" class="form-group">
+                      {{#if (eq inputField.type "text")}}
+                        <input
+                          value="{{inputField.value}}"
+                          type="text"
+                          class="form-control"
+                          id="{{inputField.property}}"
+                          name="{{inputField.property}}"
+                          placeholder="{{inputField.placeholder}}"
+                          dataindex="{{dataIndex}}"
+                          {{#if inputField.required}}
+                            required
+                          {{/if}}
+                          maxlength="{{inputField.maxLength}}"
+                        />
+                      {{/if}}
+                      {{#if (eq inputField.type "number")}}
+                        <input
+                          value="{{inputField.value}}"
+                          type="number"
+                          class="form-control"
+                          id="{{inputField.property}}"
+                          name="{{inputField.property}}"
+                          placeholder="{{inputField.placeholder}}"
+                          dataindex="{{dataIndex}}"
+                          {{#if inputField.required}}
+                            required
+                          {{/if}}
+                          maxlength="{{inputField.maxLength}}"
+                        />
+                      {{/if}}
+                      {{#if (eq inputField.type "select")}}
+                        <select
+                          value="{{asiento.Exonerado.value}}" 
+                          name="{{inputField.property}}" 
+                          class="form-control"
+                          {{#if inputField.required}}
+                            required
+                          {{/if}}
+                          dataindex="{{dataIndex}}">
+                          {{#each inputField.options as |option optionId|}}
+                            {{#if option.selected}}
+                              <option value="{{option.value}}" selected>{{option.label}}</option>
+                            {{else}}
+                              <option value="{{option.value}}">{{option.label}}</option>
+                            {{/if}}
+                          {{/each}}
+                        </select>
+                      {{/if}}
+                      {{#if (eq inputField.type "date")}}
+                        <input
+                          value="{{inputField.value}}"
+                          type="text"
+                          class="form-control datepicker_complete"
+                          id="{{inputField.property}}"
+                          name="{{inputField.property}}"
+                          placeholder="{{inputField.placeholder}}"
+                          dataindex="{{dataIndex}}"
+                          maxlength="{{inputField.maxLength}}"
+                          {{#if inputField.required}}
+                            required
+                          {{/if}}
+                          autocomplete="off"
+                        />
+                      {{/if}}
+                      {{#if (eq inputField.type "shortdate")}}
+                        <input
+                          value="{{inputField.value}}"
+                          type="text"
+                          class="form-control datepicker_annomes"
+                          id="{{inputField.property}}"
+                          name="{{inputField.property}}"
+                          placeholder="{{inputField.placeholder}}"
+                          dataindex="{{dataIndex}}"
+                          maxlength="{{inputField.maxLength}}"
+                          {{#if inputField.required}}
+                            required
+                          {{/if}}
+                          autocomplete="off"
+                        />
+                      {{/if}}
+                      <div class="help-block"></div>
+                    </td>
+                {{/each}}
+              </tr>
+            {{/each}}
+
+          </table>
+        </script>
+
+        <div class="text-right">
+          <button type="submit" class="btn btn-success">
+            Enviar
+          </button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
+<script>
+
+    $( function() {
+
+
+      /*
+        ---------------------------
+        ---------------------------
+        Inicialización de variables
+        ---------------------------
+        ---------------------------
+      */
+
+      /* inicializar Array de asientos */
+      data = {
+        asientos: [
+        ]
+      }
+
+
+
+      /*
+        --------------------------
+        --------------------------
+                Funciones
+        --------------------------
+        --------------------------
+      */
+
+
+      /* Revisa los datos de data y reinicia el contenedor para reflejar el estado */
+      function actualizarRender() {
+
+        /* resetear renderizado anterior */
+        $(".asientos-container--target").html("");
+
+        /* Renderizar handlebars */
+        var htmlAsientos = $("#asiento-template").html();
+        var templateAsientos = Handlebars.compile(htmlAsientos);
+
+        /* Generar Sello */
+        var stampAsientos = templateAsientos(data);
+
+        /* Estampar con el Sello */
+        $(".asientos-container--target").append(stampAsientos);
+
+        /* Estampar con el Sello */
+        activarDatepickers();
+
+      }
+
+      /* Agrega un asiento vacio */
+      function agregarAsiento(event) {
+        /* inicializar Una muestra vacia de asiento */
+        modelAsiento = [
+          {
+            property: "Cuenta",
+            label: "Código de Cuenta",
+            placeholder: "XXXXX",
+            type: "text",
+            value: "",
+            maxLength: 5,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Annomes",
+            label: "Año/mes",
+            placeholder: "AAAAMM",
+            type: "text",
+            value: "",
+            maxLength: 6,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Subdiario",
+            label: "Subdiario",
+            placeholder: "Subdiario",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Comprobante",
+            label: "Comprobante",
+            placeholder: "XXXX",
+            type: "text",
+            value: "",
+            maxLength: 4,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Fecha_Registro",
+            label: "Fecha de Registro",
+            placeholder: "Fecha de Registro",
+            type: "date",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Tipo_Anexo",
+            label: "Tipo de Anexo",
+            placeholder: "Tipo de Anexo",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Cod_Cliente",
+            label: "Código de Cliente",
+            placeholder: "Código de Cliente",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Tipo_Doc",
+            label: "Tipo de Documento",
+            placeholder: "Tipo de Documento",
+            type: "select",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+              {
+                label: "Seleccione una opción",
+                value:  "",
+                selected: true,
+              },
+              {
+                label: "Factura",
+                value:  "FT",
+                selected: false,
+              },
+              {
+                label: "Boleta",
+                value:  "BT",
+                selected: false,
+              },
+            ]
+          },
+          {
+            property: "Nro_Doc",
+            label: "Nro de Documento",
+            placeholder: "Nro de Documento",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Fecha_Documento",
+            label: "Fecha de Documento",
+            placeholder: "Fecha de Documento",
+            type: "date",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+            ]
+          },
+          {
+            property: "Tipo_Doc_Ref",
+            label: "Tipo de Documento de Referencia",
+            placeholder: "Tipo de Documento de Referencia",
+            type: "select",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+              {
+                label: "Seleccione una opción",
+                value:  "",
+                selected: true,
+              },
+              {
+                label: "Nota de credito",
+                value:  "NC",
+                selected: false,
+              },
+              {
+                label: "Nota de debito",
+                value:  "ND",
+                selected: false,
+              }
+            ]
+          },
+          {
+            property: "Nro_Doc_Ref",
+            label: "Nro Documento de Referencia",
+            placeholder: "Nro Documento de Referencia",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Valor",
+            label: "Valor de impuesto selectivo al consumo",
+            placeholder: "Valor de impuesto selectivo al consumo",
+            type: "number",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Tasa_Igv",
+            label: "Tasa Igv",
+            placeholder: "Tasa Igv",
+            type: "number",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Igv",
+            label: "Igv",
+            placeholder: "Igv",
+            type: "number",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Importe",
+            label: "Importe",
+            placeholder: "Importe",
+            type: "number",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Conv_Tc",
+            label: "Conv Tc",
+            placeholder: "Conv Tc",
+            type: "select",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+              {
+                label: "Seleccione una opción",
+                value:  "",
+                selected: true,
+              },
+              {
+                label: "Ninguno",
+                value:  "NIN",
+                selected: false,
+              },
+              {
+                label: "Especial",
+                value:  "ESP",
+                selected: false,
+              }
+            ]
+          },
+          {
+            property: "Tc",
+            label: "Tasa conversión",
+            placeholder: "Tasa conversión",
+            type: "number",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Glosa",
+            label: "Glosa",
+            placeholder: "Glosa",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Glosa_Mov",
+            label: "Glosa Movimiento",
+            placeholder: "Glosa Movimiento",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Anulado",
+            label: "Anulado",
+            placeholder: "Anulado",
+            type: "select",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+              {
+                label: "Seleccione una opción",
+                value:  "",
+                selected: true,
+              },
+              {
+                label: "Si",
+                value:  "0",
+                selected: false,
+              },
+              {
+                label: "No",
+                value:  "1",
+                selected: false,
+              }
+            ]
+          },
+          {
+            property: "Ruc_Cliente",
+            label: "Ruc del Cliente",
+            placeholder: "Ruc del Cliente",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Razon_Social",
+            label: "Razón Social",
+            placeholder: "Razón Social",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Centro_Costos",
+            label: "Centro de costos",
+            placeholder: "Centro de costos",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Fecha_Vencimiento",
+            label: "Fecha de Vencimiento",
+            placeholder: "Fecha de Vencimiento",
+            type: "date",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Fecha_Doc_Ref",
+            label: "Fecha de Doc de Referencia",
+            placeholder: "Fecha de Doc de Referencia",
+            type: "date",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Exportacion",
+            label: "Exportación",
+            placeholder: "Exportación",
+            type: "select",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+              {
+                label: "Seleccione una opción",
+                value:  "",
+                selected: true,
+              },
+              {
+                label: "Si",
+                value:  "0",
+                selected: false,
+              },
+              {
+                label: "No",
+                value:  "1",
+                selected: false,
+              }
+            ]
+          },
+          {
+            property: "Nro_File",
+            label: "Nro File",
+            placeholder: "Nro File",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Otro_Imp",
+            label: "Otros Impuestos",
+            placeholder: "Otros Impuestos",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Nro_Doc_Hasta",
+            label: "Nro Doc Hasta",
+            placeholder: "Nro Doc Hasta",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Exonerado",
+            label: "Exonerado",
+            placeholder: "Exonerado",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+              {
+                label: "Seleccione una opción",
+                value:  "",
+                selected: true,
+              },
+              {
+                label: "Si",
+                value:  "0",
+                selected: false,
+              },
+              {
+                label: "No",
+                value:  "1",
+                selected: false,
+              }
+            ]
+          },
+          {
+            property: "Otros_Cargos",
+            label: "Otros Cargos",
+            placeholder: "Otros Cargos",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Cinterface",
+            label: "C. interface",
+            placeholder: "C. interface",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Codemp",
+            label: "Codigo de empresa",
+            placeholder: "Codigo de empresa",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "Usuario",
+            label: "Usuario",
+            placeholder: "Usuario",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "ImpBolsa",
+            label: "Impuesto de Bolsa",
+            placeholder: "Impuesto de Bolsa",
+            type: "text",
+            value: "",
+            maxLength: 256,
+            required: false,
+            options: [
+            ]
+          },
+          {
+            property: "debe_haber",
+            label: "Debe o Haber",
+            placeholder: "Debe o Haber",
+            type: "select",
+            value: "",
+            maxLength: 256,
+            required: true,
+            options: [
+              {
+                label: "Seleccione una opción",
+                value:  "",
+                selected: true,
+              },
+              {
+                label: "Debe",
+                value:  "0",
+                selected: false,
+              },
+              {
+                label: "Haber",
+                value:  "1",
+                selected: false,
+              }
+            ]
+          }
+        ]
+
+        /* Agrega asiento vacio y actualiza render / object asign elimina referencia y lo establece como nuevo */
+        data.asientos.push( modelAsiento );
+        actualizarRender();
+        /* Muestra como se transformo la información de data */
+        console.log(data);
+
+        event.preventDefault();
+      }
+
+      /* función para eliminar asientos */
+      function eliminarAsiento(event, $this) {
+        /* Detecta el indice en el array */
+        $indexValAsiento = $this.closest(".asiento").attr("index");
+        console.log($indexValAsiento);
+
+        var result = confirm("Presione aceptar para eliminar definitivamente este asiento");
+        if (result) {
+          /* Elimina el asiento en el array de asientos */
+          data.asientos.splice($indexValAsiento, 1);
+        }
+        actualizarRender();
+        /* Muestra como se transformo la información de data */
+        console.log(data);
+
+        event.preventDefault();
+      }
+
+      /* activar datepickers */
+      function activarDatepickers() {
+        $( ".datepicker_annomes" ).datepicker({
+            format: 'yy MM',
+            viewMode: "months",
+            minViewMode: "months",
+        });
+        $( ".datepicker_complete" ).datepicker({
+            format: 'yyyy/mm/dd'
+        });
+      }
+
+
+
+      /*
+        --------------------------
+        --------------------------
+            Disparos de inicio
+        --------------------------
+        --------------------------
+      */
+
+      actualizarRender();
+      activarDatepickers();
+
+
+
+      /*
+        --------------------------
+        --------------------------
+              Configuración
+        --------------------------
+        --------------------------
+      */
+
+      /* Configura un helper de igualdad para handlebars */
+      Handlebars.registerHelper('eq', function () {
+          const args = Array.prototype.slice.call(arguments, 0, -1);
+          return args.every( function(expression) {
+              return args[0] === expression;
+          });
+      });
+
+
+
+      /*
+        --------------------------
+        --------------------------
+            Acciones - Eventos
+        --------------------------
+        --------------------------
+      */
+
+      /* Actualiza los datos abstraidos cuando se ejecuta un cambio (binding input) */
+      $( ".asientos-container--target" ).on( "change keyup", "input", function() {
+        /* Probando el valor cambiado */
+        var $selected_value = $( this ).val();
+        // console.log( "val",$selected_value );
+        
+        /* Recogemos los datos a sobreescribir */
+        $indexValAsiento = $(this).closest(".asiento").attr("index");
+        $PropertyToMod = $(this).attr("dataindex");
+
+        /* Sobreescribe el valor que se cambia */
+        data.asientos[$indexValAsiento][$PropertyToMod].value = $selected_value;
+        
+        /* Verificar el estado de la información data */
+        console.log(data);
+      });
+
+      /* Actualiza los datos abstraidos cuando se ejecuta un cambio (binding select) */
+      $( ".asientos-container--target" ).on( "change keyup", "select", function() {
+        /* Probando el valor cambiado */
+        var $selected_value = $( this ).val();
+        // console.log( "val",$selected_value );
+        
+        /* Recogemos los datos a sobreescribir */
+        $indexValAsiento = $(this).closest(".asiento").attr("index");
+        $PropertyToMod = $(this).attr("dataindex");
+
+        /* Sobreescribe el valor que se cambia */
+        data.asientos[$indexValAsiento][$PropertyToMod].value = $(this).val();
+
+        /* Sobreescribe el valor de las opciones en el select para su posterior renderizado */
+        $datafield_options = data.asientos[$indexValAsiento][$PropertyToMod].options;
+
+        /* Pado adicional para sobreescribir el valor de la opcion elegida */
+        for (var option in $datafield_options) {
+          $datafield_options[option].selected = false;
+          if( $datafield_options[option].value == $selected_value ) {
+            $datafield_options[option].selected = true;
+          }
+        }
+        
+        /* Verificar el estado de la información data */
+        console.log(data);
+      });
+
+
+      /* Boton agregar nuevo asiento */
+      $( "#js-button-add" ).on( "click", function() {
+        agregarAsiento(event);
+        console.log("add pressed");
+      })
+
+      /* Boton eliminar este asiento */
+      $( ".asientos" ).on( "click","#js-button-delete", function() {
+        eliminarAsiento(event, $(this));
+        console.log("delete pressed");
+      });
+
+
+      /* Enviar formulario */
+      $(".form-asiento-ventas").submit( function(event) {
+
+          event.preventDefault();
+          var asientosFormulados = [];
+
+          for (var indexAsie in data.asientos) {
+            var tempAsiento = [];
+            // console.log(indexAsie)
+            // console.log(data.asientos[indexAsie])
+
+            for (var indexProp in data.asientos[indexAsie]) {
+              tempProp = data.asientos[indexAsie][indexProp].property;
+              tempVal = data.asientos[indexAsie][indexProp].value;
+              tempAsiento[tempProp] = tempVal;
+            }
+            // console.log(tempAsiento)
+            asientosFormulados.push( tempAsiento );
+          }
+
+          $dataResult = {
+            ruc: $("#Ruc").val(),
+            listadoAsientos: asientosFormulados
+          }
+
+          console.log($dataResult);
+
+
+          console.log("try sending",$dataResult);
+
+          $.ajax({
+            type: "POST",
+            url: "http://localhost/rest_test/process.php",
+            data: $dataResult,
+            dataType: "json",
+            encode: true,
+          }).done(function(res) {
+              console.log(res);
+              // Reset validations
+              $(".general-errors").html("");
+
+              // Start validations
+              if (!res.success) {
+
+                  console.log("res");
+                  console.log(res.errors);
+                  $(".general-errors").html(res.errors);
+
+              } else {
+                  $("form").html(
+                      '<div class="alert alert-success">' + res.message + "</div>"
+                  );
+              }
+
+          });
+
+      });
+
+
+    });
+
+</script>
